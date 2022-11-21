@@ -1,0 +1,47 @@
+import { useState, useEffect, useMemo,useCallback } from 'react';
+import { log, getService } from 'platform-common-service';
+// import {} from 'subscription-management-common-service';
+import { LoadingStatus } from '../constants';
+
+const useSubscriptionGrid = () => {
+
+    const subscriptionService = getService('subscription-management-service');
+    const [subscriptions, setSubscriptions] = useState([]);
+    const [status, setStatus] = useState(LoadingStatus.LOADING);
+    const [totalCount, setTotalCount] = useState(0);
+
+   const fetchSubscriptionGrid=()=>{
+           try {            
+                subscriptionService.fetchAllSubscriptions().then(
+                    subscriptionRecords => {  
+                        setTotalCount(Object.keys(subscriptionRecords).length);                                             
+                        setSubscriptions(subscriptionRecords); 
+                        setStatus(LoadingStatus.SUCCESS);
+                    }
+                ); 
+            } catch (err) {
+            setStatus(LoadingStatus.ERROR);
+            log(err);
+        }
+   }
+
+    useEffect(() => {
+        fetchSubscriptionGrid();
+    }, []);
+
+    const fetchSubscriptionMasterData = useCallback(() => {
+        fetchSubscriptionGrid();
+    }, []);
+   
+    const subscriptionGrid = useMemo(() => ({
+        subscriptions,status,totalCount, fetchSubscriptionMasterData}),
+        [setSubscriptions,setStatus,setTotalCount, fetchSubscriptionMasterData]
+
+    );
+
+    return {
+        subscriptionGrid
+    };
+};
+
+export default useSubscriptionGrid;
